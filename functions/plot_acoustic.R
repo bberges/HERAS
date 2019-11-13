@@ -1,4 +1,4 @@
-plot_acoustic <- function(Data,Cruise,Haul){
+plot_acoustic <- function(Data,Cruise,Haul,figurePath){
   
   country <- as.character(Cruise$CruiseCountry)
   

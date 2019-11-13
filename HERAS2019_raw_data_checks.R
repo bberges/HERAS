@@ -10,13 +10,14 @@ library(reshape) # melt and cast
 library(gstat)
 library(sp)
 
-path <- 'C:/Users/berge057/OneDrive - WageningenUR/projects/surveys/2019_HERAS/post_cruise/preparation/data_checks/'
+path <- 'C:/git/HERAS/'
 
 try(setwd(path),silent=TRUE)
 
 mainPath      <- file.path(".")
+rawDataPath   <- file.path(".","data/raw_data/")
 dataPath      <- file.path(".","data/")
-figurePath    <- file.path(".","figures/")
+figurePath    <- file.path(".","figures/raw_data/")
 reportPath    <- file.path(".","reports/")
 functionPath  <- file.path(".","functions/")
 
@@ -29,10 +30,10 @@ source(file.path(functionPath,"plot_acoustic.R"))
 # load species list
 fileName <- 'species_codes_201911.csv'
 
-speciesList <- read.csv(file.path(mainPath,fileName), fill = TRUE, header = TRUE)
+speciesList <- read.csv(file.path(dataPath,fileName), fill = TRUE, header = TRUE)
 
 # build directory list
-dataDirs <- list.dirs(path = dataPath, full.names = TRUE, recursive = TRUE)
+dataDirs <- list.dirs(path = rawDataPath, full.names = TRUE, recursive = TRUE)
 dataDirs <- dataDirs[2:length(dataDirs)]
 
 # loop on directories (i.e. each country)
@@ -52,10 +53,10 @@ for(idxDir in dataDirs){
   }
 
   ### plot Biotic data
-  #plot_biotic(Cruise,Biology,Catch,Haul,speciesList)
+  plot_biotic(Cruise,Biology,Catch,Haul,speciesList,figurePath)
   
   ### plot Acoustic data
-  #plot_acoustic(Data,Cruise,Haul)
+  plot_acoustic(Data,Cruise,Haul,figurePath)
   
   # make report
 }

@@ -1,4 +1,4 @@
-plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList){
+plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList,figurePath){
   
   idxMatch <- match(c('HER', 'SPR'),speciesList$SPECIESID)
   
