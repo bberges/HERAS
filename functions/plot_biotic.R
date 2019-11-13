@@ -1,5 +1,7 @@
 plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList,figurePath){
   
+  haulsPerGraph <- 10
+  
   idxMatch <- match(c('HER', 'SPR'),speciesList$SPECIESID)
   
   idxFiltBio <- as.numeric(as.character(Biology$CatchSpeciesCode)) %in% speciesList$WORMS[idxMatch]
@@ -21,56 +23,73 @@ plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList,figurePath){
     currentSpecies  <- uniqueSpecies[idxSpecies]
     BiologyTemp     <- Biology[Biology$CatchSpeciesCode == currentSpecies,]
     
-    png(file.path(figurePath,paste0('biotic_',country,'_lengthfrequency_all_',uniqueSpeciesIDStr[idxSpecies],'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
+    lengthInd    <- as.numeric(as.character(BiologyTemp$BiologyLengthClass))
+    lengthInd    <- lengthInd[which(!is.na(lengthInd))]
     
-    hist(as.numeric(as.character(BiologyTemp$BiologyLengthClass))*1e-1,
-         breaks = 0:50,
-         ylab = 'Count (#)',
-         xlab = 'Length (cm)',
-         main = uniqueSpeciesName[idxSpecies])
-    
-    dev.off()
+    if(length(lengthInd != 0)){
+      png(file.path(figurePath,paste0('biotic_',country,'_length_all_',uniqueSpeciesIDStr[idxSpecies],'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
+      
+      hist(lengthInd,
+           breaks = seq(from = -5, to = 405, by = 10),
+           ylab = 'Count (#)',
+           xlab = 'age (wr)',
+           main = uniqueSpeciesName[idxSpecies])
+      
+      dev.off()
+    }
   }
   
   #### Step 1.2 Length frequencies for each haul ####
   for(idxSpecies in 1:nSpecies){
     currentSpecies  <- uniqueSpecies[idxSpecies]
     BiologyTemp     <- Biology[Biology$CatchSpeciesCode == currentSpecies,]
-    haulUnique      <- as.numeric(as.character(unique(BiologyTemp$HaulNumber)))
-    haulUnique      <- haulUnique[haulUnique %in% as.numeric(as.character(Haul$HaulNumber))]
-    haulUnique      <- haulUnique[order(haulUnique)]
-    nHauls          <- length(haulUnique)
     
-    png(file.path(figurePath,paste0('biotic_',country,'_lengthfrequency_haul_',
-                                    uniqueSpeciesIDStr[idxSpecies],
-                                    '.png')), 
-        width = 16, 
-        height = 12, 
-        units = "cm", 
-        res = 300, 
-        pointsize = 10)
+    LF_mat <- mk_length_matrix(BiologyTemp)
     
-    opar <- par(mfrow = n2mfrow(nHauls), mar = c(2,2,1,1), oma = c(2,2,3,0))
+    nPlots <- ceiling(dim(LF_mat)[2]/haulsPerGraph)
     
-    for(idxHaul in 1:nHauls){
-      BiologyTempHaul <- BiologyTemp[BiologyTemp$HaulNumber == haulUnique[idxHaul],]
-      BiologyTempHaul$BiologyLengthClass
-      hist(as.numeric(as.character(BiologyTempHaul$BiologyLengthClass))*1e-1,
-           breaks = 0:50,
-           ylab = 'Count (#)',
-           xlab = 'Length (cm)',
-           main = paste0('Haul ', haulUnique[idxHaul]%%1000)) # haulUnique[idxHaul]-min(haulUnique)+1,'-',uniqueSpeciesIDStr[idxSpecies]
-      legend("topleft", legend = paste0('N=',length(BiologyTempHaul$BiologyLengthClass)),bty = "n") 
+    startPlots <- 1
+    for(idxPlot in 1:nPlots){
+      if((startPlots+haulsPerGraph) <= dim(LF_mat)[2]){
+        currentPlots <- startPlots:(startPlots+haulsPerGraph-1)
+      }else{
+        currentPlots <- startPlots:dim(LF_mat)[2]
+      }
+      
+      png(file.path(figurePath,paste0('biotic_',
+                                      country,
+                                      '_lengthfrequency_haul_',
+                                      uniqueSpeciesIDStr[idxSpecies],
+                                      '_',
+                                      as.character(idxPlot),'.png')), 
+          width = 1500, 
+          height = 900)
+      
+      par(mfrow=c(1,haulsPerGraph),mar=c(5,2.5,4,1)+0.1)
+      
+      barplot(LF_mat[,currentPlots[1]],
+              horiz=T,
+              names.arg=row.names(LF_mat),
+              main=names(LF_mat[currentPlots[1]]),
+              cex.names = 1.5)
+      title(colnames(LF_mat)[currentPlots[1]],cex.main =2.5)
+      legend("topleft", legend = paste0(uniqueSpeciesIDStr[idxSpecies],' N=',sum(LF_mat[,currentPlots[1]])),bty = "n",cex=2.5) 
+      
+      if(length(currentPlots) > 1){
+        for (i in 2:length(currentPlots)){
+          barplot(LF_mat[,currentPlots[i]],
+                  horiz=T,main=names(LF_mat[currentPlots[i]]),
+                  cex.names = 1.5)
+          title(colnames(LF_mat)[currentPlots[i]],cex.main=2.5)
+          legend("topleft", legend = paste0('N=',sum(LF_mat[,currentPlots[i]])),bty = "n",cex=2.5) 
+        }
+      }
+      
+      dev.off()
+      
+      startPlots <- startPlots + haulsPerGraph
     }
-    dev.off()
   }
-  
-  uniqueSpecies <- as.numeric(as.character(unique(Biology$CatchSpeciesCode)))
-  nSpecies  <- length(uniqueSpecies)
-  
-  uniqueSpeciesName <- as.character(speciesList$SPECIESNAME[match(uniqueSpecies,speciesList$WORMS)])
-  uniqueSpeciesIDStr <- as.character(speciesList$SPECIESID[match(uniqueSpecies,speciesList$WORMS)])
-  
   
   #### Step 1.3 - length-weight relationship ####
   for(idxSpecies in 1:nSpecies){

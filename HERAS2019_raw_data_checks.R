@@ -1,6 +1,7 @@
 rm(list = ls())
 
 #### Packages ####
+library(ggplot2)
 library(mapplots) # draw.pie
 data("coast") # coastlines
 library(maps)
@@ -14,18 +15,22 @@ path <- 'C:/git/HERAS/'
 
 try(setwd(path),silent=TRUE)
 
+surveyYear    <- 2018
 mainPath      <- file.path(".")
-rawDataPath   <- file.path(".","data/raw_data/")
-dataPath      <- file.path(".","data/")
-figurePath    <- file.path(".","figures/raw_data/")
-reportPath    <- file.path(".","reports/")
-functionPath  <- file.path(".","functions/")
+dataPath      <- file.path(".","data")
+functionPath  <- file.path(".","functions")
+reportPath    <- file.path(".","reports",surveyYear)
+rawDataPath   <- file.path(".","data",surveyYear)
+figurePath    <- file.path(".","figures",surveyYear)
 
 source(file.path(functionPath,"load_ICESdB.R"))
 source(file.path(functionPath,"plot_biotic.R"))
 source(file.path(functionPath,"plot_acoustic.R"))
-#source(file.path(functionPath,"forecastScenarios.r"))
-#source(file.path(functionPath,"forecastFunctions.r"))
+source(file.path(functionPath,"mk_report_ICESdB.R"))
+source(file.path(functionPath,"mk_length_matrix.R"))
+
+mkReport  <- TRUE
+mkPlot    <- TRUE
 
 # load species list
 fileName <- 'species_codes_201911.csv'
@@ -52,11 +57,30 @@ for(idxDir in dataDirs){
     }
   }
 
-  ### plot Biotic data
-  plot_biotic(Cruise,Biology,Catch,Haul,speciesList,figurePath)
+  if(mkPlot){
+    ### plot Biotic data
+    plot_biotic(Cruise,
+                Biology,
+                Catch,
+                Haul,
+                speciesList,
+                figurePath)
+      
+    ### plot Acoustic data
+    plot_acoustic(Data,
+                  Cruise,
+                  Haul,
+                  figurePath)
+  }
   
-  ### plot Acoustic data
-  plot_acoustic(Data,Cruise,Haul,figurePath)
-  
-  # make report
+  if(mkReport){
+    # make report
+    mk_report_ICESdB(Cruise,
+                     Biology,
+                     Catch,
+                     Haul,
+                     Data,
+                     speciesList,
+                     reportPath)
+  }
 }
