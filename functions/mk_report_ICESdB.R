@@ -10,7 +10,6 @@ mk_report_ICESdB <- function(Cruise,
 
   
   country <- as.character(Cruise$CruiseCountry)
-  print(country)
   
   pdf(file.path(reportPath,paste('HERAS_raw_data_report_',country,".pdf",sep="")))
 
