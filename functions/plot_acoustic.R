@@ -1,6 +1,7 @@
 plot_acoustic <- function(Data,Cruise,Haul,figurePath){
   
-  country <- as.character(Cruise$CruiseCountry)
+  country       <- as.character(Cruise$CruiseCountry)
+  cruiselocalID <- as.character(Cruise$CruiseLocalID)
   
   #idxFiltData <- as.character(Data$DataSaCategory) %in% c('HER', 'SPR', 'CLU','MIX') # ,'CLU','NOP','MAC','SAN'
   #Data <- Data[idxFiltData,]
@@ -22,7 +23,7 @@ plot_acoustic <- function(Data,Cruise,Haul,figurePath){
                   by = list(cruiseTracks$LogDistance),
                   FUN = max)
   
-  png(file.path(figurePath,paste0('acoustic_',country,'_cruisetracks_map.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
+  png(file.path(figurePath,paste0('acoustic_',country,'_cruisetracks_map_',cruiselocalID,'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
   
   map('worldHires', 
       col = "green", 
@@ -68,7 +69,7 @@ plot_acoustic <- function(Data,Cruise,Haul,figurePath){
     SA.df <- as.data.frame(cbind(agg_1$SA,agg$LogLatitude,agg$LogLongitude))
     colnames(SA.df) <- c('SA','LogLatitude','LogLongitude')
     
-    png(file.path(figurePath,paste0('acoustic_',country,'_SA_map_',currentSpecies,'.png')), width = 30, height = 30, units = "cm", res = 300, pointsize = 10)
+    png(file.path(figurePath,paste0('acoustic_',country,'_SA_map_',currentSpecies,'_',cruiselocalID,'.png')), width = 30, height = 30, units = "cm", res = 300, pointsize = 10)
     
     map('worldHires', 
         col = "green", 

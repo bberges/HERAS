@@ -15,13 +15,9 @@ path <- 'C:/git/HERAS/'
 
 try(setwd(path),silent=TRUE)
 
-surveyYear    <- 2017
 mainPath      <- file.path(".")
 dataPath      <- file.path(".","data")
 functionPath  <- file.path(".","functions")
-reportPath    <- file.path(".","reports",surveyYear)
-rawDataPath   <- file.path(".","data",surveyYear)
-figurePath    <- file.path(".","figures",surveyYear)
 
 source(file.path(functionPath,"load_ICESdB.R"))
 source(file.path(functionPath,"plot_biotic.R"))
@@ -29,13 +25,21 @@ source(file.path(functionPath,"plot_acoustic.R"))
 source(file.path(functionPath,"mk_report_ICESdB.R"))
 source(file.path(functionPath,"mk_length_matrix.R"))
 
-mkReport  <- FALSE
-mkPlot    <- FALSE
+mkReport  <- TRUE
+mkPlot    <- TRUE
 
 # load species list
 fileName <- 'species_codes_201911.csv'
 
 speciesList <- read.csv(file.path(dataPath,fileName), fill = TRUE, header = TRUE)
+
+surveyYearMat    <- c(2019,2018,2017)
+
+for(surveyYear in surveyYearMat){
+
+reportPath    <- file.path(".","reports",surveyYear)
+rawDataPath   <- file.path(".","data",'raw_data',surveyYear)
+figurePath    <- file.path(".","figures",'raw_data',surveyYear)
 
 # build directory list
 dataDirs <- list.dirs(path = rawDataPath, full.names = TRUE, recursive = TRUE)
@@ -104,3 +108,4 @@ for(idxDir in dataDirs){
 
 
 save(CatchAll, HaulAll, BiologyAll, CruiseAll, DataAll, file = file.path(rawDataPath,paste0(surveyYear,"_HERAS",".Rdata")))
+}

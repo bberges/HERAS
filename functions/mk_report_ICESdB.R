@@ -9,9 +9,10 @@ mk_report_ICESdB <- function(Cruise,
   haulsPerGraph <- 10
 
   
-  country <- as.character(Cruise$CruiseCountry)
+  country       <- as.character(Cruise$CruiseCountry)
+  cruiselocalID <- as.character(Cruise$CruiseLocalID)
   
-  pdf(file.path(reportPath,paste('HERAS_raw_data_report_',country,".pdf",sep="")))
+  pdf(file.path(reportPath,paste('HERAS_raw_data_report_',country,'_',cruiselocalID,".pdf",sep="")))
 
   # filter bio data to Herring and Sprat  
   idxMatch <- match(c('HER', 'SPR'),speciesList$SPECIESID)
@@ -53,19 +54,22 @@ mk_report_ICESdB <- function(Cruise,
       barplot(LF_mat[,currentPlots[1]],
               horiz=T,
               names.arg=row.names(LF_mat))
-      title(paste0('H=',as.numeric(colnames(LF_mat)[currentPlots[1]])%%100,
-                   '-',
-                   uniqueSpeciesIDStr[idxSpecies],
-                   '-N=',sum(LF_mat[,currentPlots[1]])),
-            cex.main =1)
+
+      
+      title(main = list(paste0( 'H=',as.numeric(colnames(LF_mat)[currentPlots[1]])%%100,
+                                '\nN=',sum(LF_mat[,currentPlots[1]]),
+                                '\n',
+                                uniqueSpeciesIDStr[idxSpecies]), cex = 1,
+                        col = "red", font = 3))
       #legend("topleft", legend = paste0(uniqueSpeciesIDStr[idxSpecies],' N=',sum(LF_mat[,currentPlots[1]])),bty = "n",cex=2.5) 
       
       if(length(currentPlots) > 1){
         for (i in 2:length(currentPlots)){
           barplot(LF_mat[,currentPlots[i]],
                   horiz=T)
-          title(paste0('H=',as.numeric(colnames(LF_mat)[currentPlots[i]])%%100,
-                       '-N=',sum(LF_mat[,currentPlots[1]])),cex.main=1)
+          title(main = list(paste0('H=',as.numeric(colnames(LF_mat)[currentPlots[i]])%%100,
+                                   '\nN=',sum(LF_mat[,currentPlots[i]])), cex = 1,
+                            col = "red", font = 3))
         }
       }
       
@@ -114,6 +118,7 @@ mk_report_ICESdB <- function(Cruise,
     
     SA.df <- as.data.frame(cbind(agg_1$SA,agg$LogLatitude,agg$LogLongitude))
     colnames(SA.df) <- c('SA','LogLatitude','LogLongitude')
+    SA.df <- SA.df[which(SA.df$SA!=0),]
     
     # create df for hauls
     haulLon <- as.numeric(as.character(Haul$HaulStartLongitude))

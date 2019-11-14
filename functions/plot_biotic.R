@@ -10,7 +10,8 @@ plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList,figurePath){
   idxFiltCatch <- as.numeric(as.character(Catch$CatchSpeciesCode)) %in% speciesList$WORMS[idxMatch]
   Catch <- Catch[idxFiltCatch,]
 
-  country <- as.character(Cruise$CruiseCountry)
+  country       <- as.character(Cruise$CruiseCountry)
+  cruiselocalID <- as.character(Cruise$CruiseLocalID)
   
   uniqueSpecies <- as.numeric(as.character(unique(Biology$CatchSpeciesCode)))
   nSpecies  <- length(uniqueSpecies)
@@ -27,7 +28,7 @@ plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList,figurePath){
     lengthInd    <- lengthInd[which(!is.na(lengthInd))]
     
     if(length(lengthInd != 0)){
-      png(file.path(figurePath,paste0('biotic_',country,'_length_all_',uniqueSpeciesIDStr[idxSpecies],'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
+      png(file.path(figurePath,paste0('biotic_',country,'_length_all_',uniqueSpeciesIDStr[idxSpecies],'_',cruiselocalID,'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
       
       hist(lengthInd,
            breaks = seq(from = -5, to = 405, by = 10),
@@ -61,7 +62,8 @@ plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList,figurePath){
                                       '_lengthfrequency_haul_',
                                       uniqueSpeciesIDStr[idxSpecies],
                                       '_',
-                                      as.character(idxPlot),'.png')), 
+                                      as.character(idxPlot),'_',
+                                      cruiselocalID,'.png')), 
           width = 1500, 
           height = 900)
       
@@ -103,7 +105,7 @@ plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList,figurePath){
     weightInd <- weightInd[which(!is.na(weightInd))]
     
     if(length(weightInd) != 0 && length(lengthInd != 0)){
-      png(file.path(figurePath,paste0('biotic_',country,'_weight_length_',uniqueSpeciesIDStr[idxSpecies],'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
+      png(file.path(figurePath,paste0('biotic_',country,'_weight_length_',uniqueSpeciesIDStr[idxSpecies],'_',cruiselocalID,'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
       
       
       plot(x = lengthInd,
@@ -124,7 +126,7 @@ plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList,figurePath){
     haulUnique      <- haulUnique[order(haulUnique)]
     nHauls          <- length(haulUnique)
     
-    png(file.path(figurePath,paste0('biotic_',country,'_age_distribution_haul_',uniqueSpeciesIDStr[idxSpecies],'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
+    png(file.path(figurePath,paste0('biotic_',country,'_age_distribution_haul_',uniqueSpeciesIDStr[idxSpecies],'cruiselocalID','.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
     
     opar <- par(mfrow = n2mfrow(nHauls), mar = c(2,2,1,1), oma = c(2,2,3,0))
     
@@ -159,7 +161,7 @@ plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList,figurePath){
     ageInd    <- ageInd[which(!is.na(ageInd))]
     
     if(length(lengthInd) != 0 && length(ageInd != 0)){
-      png(file.path(figurePath,paste0('biotic_',country,'_age_length_',uniqueSpeciesIDStr[idxSpecies],'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
+      png(file.path(figurePath,paste0('biotic_',country,'_age_length_',uniqueSpeciesIDStr[idxSpecies],'_',cruiselocalID,'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
       
       
       plot(x = lengthInd,
@@ -181,7 +183,7 @@ plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList,figurePath){
     ageInd    <- ageInd[which(!is.na(ageInd))]
     
     if(length(ageInd != 0)){
-      png(file.path(figurePath,paste0('biotic_',country,'_age_all_',uniqueSpeciesIDStr[idxSpecies],'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
+      png(file.path(figurePath,paste0('biotic_',country,'_age_all_',uniqueSpeciesIDStr[idxSpecies],'cruiselocalID','.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
       
       hist(ageInd,
            breaks = (min(ageInd)-0.5):(max(ageInd)+0.5),
@@ -221,7 +223,7 @@ plot_biotic <- function(Cruise,Biology,Catch,Haul,speciesList,figurePath){
   hh <- make.xyz(x = dfCatch$lon, y = dfCatch$lat, z = dfCatch$catch, group = dfCatch$species)
   
   #opar <- par(mfrow = c(1,1), mar = c(2,2,1,1), oma = c(2,2,3,0))
-  png(file.path(figurePath,paste0('biotic_',country,'_catch_prop.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
+  png(file.path(figurePath,paste0('biotic_',country,'_catch_prop_',cruiselocalID,'.png')), width = 16, height = 12, units = "cm", res = 300, pointsize = 10)
   
   map('worldHires', 
       col = "green", 
