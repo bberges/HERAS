@@ -1,21 +1,35 @@
 rm(list=ls())
+
 library(plyr)
 library("XML")
-# directory for results
-pathOut<-"C:/Users/sakin001/Google Drive/HERAS/2018/STOX/"
 
-setwd("C:/Users/sakin001/workspace/stox/project/")
-#directories to extract  data from 
-StoXDir<- "C:/Users/sakin001/workspace/stox/project/" #Directory path where StoX workspace sits
+path <- 'C:/git/HERAS/'
 
-#the name of the StoX project to extract data from.
-#ProjectName<-   "2018207_HERAS2018_NOR - v2.6"
-ProjectName<-   "02 HERAS_2018_HER"
+try(setwd(path),silent=TRUE)
+
+mainPath      <- file.path(".")
+dataPath      <- file.path(".","data")
+outPath       <- file.path(".","output")
+functionPath  <- file.path(".","functions")
+
+surveyYearMat    <- c(2018)
+
+surveyYear <- surveyYearMat[1]
+
+StoXDataPath  <- file.path(".","data",'StoX',surveyYear)
+figurePath    <- file.path(".","figures",'StoX',surveyYear)
+
+# build directory list
+dataDirs <- list.dirs(path = StoXDataPath, full.names = TRUE, recursive = FALSE)
+
+idxDataDir <- 1
+
+projectPath   <- dataDirs[idxDataDir]
 
 #Extract data from xml
-xml.file <- paste0(StoXDir,ProjectName,"/process/project.xml")
-data <- xmlParse(xml.file, useInternalNodes = TRUE)
-xml_data <- xmlToList(data)
+xml.file  <- file.path(projectPath,"/process/","project.xml")
+data      <- xmlParse(xml.file, useInternalNodes = TRUE)
+xml_data  <- xmlToList(data)
 
 # Generate Transect file with unique ID
 edsu <- ldply(xml_data$processdata$edsupsu , data.frame,stringsAsFactors = F)
@@ -25,31 +39,19 @@ edsu<-cbind(as.data.frame(do.call(rbind,medsu),stringsAsFactors = F),edsu$Transe
 names(edsu) <- c("Cruise","LOG","Date","Time","Transect") 
 edsu$ID <- paste(edsu$Cruise,"_",edsu$LOG,sep="")
 
-# Create WD name and set working directory to the project
-StoXbaseline<-paste(StoXDir,ProjectName,"/output/baseline/data/",sep="")
-
-### get interval data summed over depth channels
-#enter the filenames to use
-nascfile<-  "4_NASC_NASC.txt"
-logfile<-"3_FilterAcoustic_AcousticData_DistanceFrequency.txt"
-bioticfile<- "6_FilterBiotic_BioticData_Individual.txt"
-SuperInd<- "22_SuperIndAbundance_SuperIndividuals.txt"
-abu<- "19_AbundanceByLength_Abundance.txt"
-#setwd to project baseline
-setwd(StoXbaseline)
-
 # process the data for that survey
-spp_data_int <- read.table(nascfile,header=TRUE,stringsAsFactors = F)
+spp_data_int <- read.table(file.path(projectPath,'output','baseline','data','4_NASC_NASC.txt'),
+                           header=TRUE,stringsAsFactors = F)
 spp_data_int <- spp_data_int[c("SampleUnit","NASC")]
 log <- strsplit(spp_data_int$SampleUnit,"/")
 nascinfo <-cbind(as.data.frame( do.call(rbind,log),stringsAsFactors = F),spp_data_int$NASC)
-
 
 names(nascinfo) <- c("Cruise","LOG","Date","Time","SA")
 nascinfo$SA<-as.numeric(nascinfo$SA)
 nascinfo$ID <- paste(nascinfo$Cruise,"_",nascinfo$LOG,sep="")
 #Read Log file
-loginfo <- read.table(logfile,sep="\t",header=TRUE,stringsAsFactors = F)
+loginfo <- read.table(file.path(projectPath,'output','baseline','data','3_FilterAcoustic_AcousticData_DistanceFrequency.txt'),
+                      sep="\t",header=TRUE,stringsAsFactors = F)
 names(loginfo)
 loginfo <- loginfo[c("cruise","log_start","start_time","lon_start","lat_start","integrator_dist")]
 loginfo$log_start<- sprintf("%.1f",loginfo$log_start)
@@ -62,8 +64,7 @@ str(loginfo)
 str(nascinfo)
 str(edsu)
 
-which(loginfo$ID %in% nascinfo$ID==FALSE)
-
+#which(loginfo$ID %in% nascinfo$ID==FALSE)
 
 spp_datap1  <- merge(loginfo, nascinfo, by="ID",all.x=TRUE)
 spp_datap1 <- spp_datap1[-which(names(spp_datap1)%in% c("Cruise.y", "LOG.y"  ,  "Date"    , "Time.y"))]
@@ -83,7 +84,8 @@ spp_data_int <- spp_data_int[order(spp_data_int$Cruise.x, as.numeric(spp_data_in
 # spp_data_int<-spp_data_int[,c(2,3,4,5,6,9,10,11,16)]
 Stratum <- ldply(xml_data$processdata$psustratum,data.frame,stringsAsFactors = F)
 colnames(Stratum) <- c("Id", "Stratum", "Transect")
-#write.csv(spp_data_int,"C:/Users/sakin001/Google Drive/HERAS/mergedNASCS14.csv",row.names = F)
+
+write.csv(spp_data_int,"C:/Users/sakin001/Google Drive/HERAS/mergedNASCS14.csv",row.names = F)
 
 ############################################################
 # resample data into 5 nmi intervals within each transect
@@ -92,7 +94,6 @@ colnames(Stratum) <- c("Id", "Stratum", "Transect")
 only.transect <- spp_data_int[!is.na(spp_data_int$Transect), ] # This bit selects the lines that has associated transects
 only.transect$TransectNo <- as.numeric(gsub("T", "", only.transect$Transect))
 only.transect <- (merge(only.transect,Stratum, by="Transect"))
-
 
 mlist <- list()
 for (i in unique(only.transect$TransectNo))
@@ -125,7 +126,6 @@ resample.transects.ID <- resample.all.transects[which(colnames(resample.all.tran
 tt <-  merge(resample.transects.ID,malldist,by = "FONEID",incomparables = F)
 malldist <-  tt[!duplicated(tt$FONEID),]
 
-
 mdist <- aggregate(cbind(Dist, SA,Dist*SA) ~ FID, malldist, mean)# get the mean SA of 5 nmi distances
 mdist$mSA <- (mdist$V3) # mSa is the mean SA of 5 nmi distances
 check.table<- mdist[which(mdist$SA - mdist$V3>500),] # check  where differences between the two way of calculating mean is large >500
@@ -137,8 +137,7 @@ mLog$FID%in%mdist$FID
 transects.resampled <- merge(mdist, mLog,by = "FID",all=T)
 str(transects.resampled )
 
-
-#write.csv(transects.resampled ,"C:/Users/sakin001/Google Drive/HERAS/HERAS_FEB19.csv",row.names = F)
+write.csv(transects.resampled ,"C:/Users/sakin001/Google Drive/HERAS/HERAS_FEB19.csv",row.names = F)
 
 ###############################################
 #calculate the transect length per stratum
@@ -166,14 +165,17 @@ mSamp.Unit.Assign<- data.frame(lapply(mSamp.Unit.Assign, as.character), stringsA
 bioassign.step1<- merge(mSamp.Unit.Assign,mStratum,by="Transect")
 bioassign.step2<- merge(mbioas,bioassign.step1,by="assignmentid")# Get bio assignment
 bioassign.step2<- data.frame(lapply(bioassign.step2, as.character), stringsAsFactors=FALSE)
-indBiotic <- read.table(bioticfile,sep="\t",header=TRUE,stringsAsFactors = F)
+
+indBiotic <- read.table(file.path(projectPath,'output','baseline','data','6_FilterBiotic_BioticData_Individual.txt'),
+                        sep="\t",header=TRUE,stringsAsFactors = F)
 indBiotic<- indBiotic[!is.na(as.numeric(indBiotic$age))&indBiotic$aphia==126417,]
 indBiotic$station <- paste0(indBiotic$cruise,"/",indBiotic$serialno)
+
 ###############################################################
 # Read final Stox output file "1_FillMissingData_SuperIndividuals.txt"
 ###############################################################
-SuperIndF<- paste0(StoXDir,ProjectName,"/output/baseline/report/1_FillMissingData_SuperIndividuals.txt")
-SuperInd <- read.table(SuperIndF,sep="\t",header=TRUE,stringsAsFactors = F)
+SuperInd <- read.table(file.path(projectPath,'output','baseline','report','1_FillMissingData_SuperIndividuals.txt'),
+                       sep="\t",header=TRUE,stringsAsFactors = F)
 SuperInd$station<- paste0(SuperInd$cruise,"/",SuperInd$serialno,collapes="")
 
 bioassign.step3 <-  merge(SuperInd,bioassign.step2,by= "station")
@@ -209,17 +211,17 @@ for(tr in 1:length(unique(bioassign.step3$Transect)))
   # in that specific transect.
   scat <- c("IMM","MAT")
   
-    if(!("IMM"%in%TRprop$specialstage)){IMMAT<-c("IMM",0)}
-    if(!("MAT"%in%TRprop$specialstage)){MMAT<-c("MAT",0)}
-    
-     madd<-  which(c(exists("IMMAT"),exists("MMAT")))
-     
-     if(length(madd)==1 ) {TRprop[2,]<-c(scat[madd],0)}
-     if(length(madd)==2 ) {TRprop[1,]<-c(scat[1],0); TRprop[2,]<-c(scat[2],0)}
-     
-    TRprop$TS <- as.numeric(TRprop$TS )
-    TRprop$MAT <- (TRprop[TRprop$specialstage%in%"MAT",]$TS)/sum(TRprop$TS )
-    TRprop$IMM <- (TRprop[TRprop$specialstage%in%"IMM",]$TS)/sum(TRprop$TS )
+  if(!("IMM"%in%TRprop$specialstage)){IMMAT<-c("IMM",0)}
+  if(!("MAT"%in%TRprop$specialstage)){MMAT<-c("MAT",0)}
+  
+  madd<-  which(c(exists("IMMAT"),exists("MMAT")))
+  
+  if(length(madd)==1 ) {TRprop[2,]<-c(scat[madd],0)}
+  if(length(madd)==2 ) {TRprop[1,]<-c(scat[1],0); TRprop[2,]<-c(scat[2],0)}
+  
+  TRprop$TS <- as.numeric(TRprop$TS )
+  TRprop$MAT <- (TRprop[TRprop$specialstage%in%"MAT",]$TS)/sum(TRprop$TS )
+  TRprop$IMM <- (TRprop[TRprop$specialstage%in%"IMM",]$TS)/sum(TRprop$TS )
   
   TRprop$Transect <- unique(bioassign.step3$Transect)[tr]
   TRlist <- rbind(TRlist,TRprop)
@@ -228,11 +230,12 @@ for(tr in 1:length(unique(bioassign.step3$Transect)))
   mvar<- c("IMMAT","MMAT")
   rm(list=mvar)
 }
+
 ##############################################
 #Maturity proportion data frame
 ##############################################
- TRlist<- TRlist[,c(3,4,5)]
- TRlist <- TRlist[!duplicated(TRlist),]
+TRlist<- TRlist[,c(3,4,5)]
+TRlist <- TRlist[!duplicated(TRlist),]
 
 ##############################################
 # Get number of aged fish per Stratum
@@ -258,8 +261,8 @@ transects.resampled$Transect <- as.character(transects.resampled$Transect)
 nasc.maturity<- merge(transects.resampled, TRlist, by="Transect")
 colnames(nasc.maturity)
 
-
-data_abu <- read.table(abu,header=TRUE,stringsAsFactors = F,sep="\t")
+data_abu <- read.table(file.path(projectPath,'output','baseline','data','19_AbundanceByLength_Abundance.txt'),
+                       header=TRUE,stringsAsFactors = F,sep="\t")
 
 strata_abu <- aggregate(Abundance~SampleUnit,data=data_abu,sum)
 colnames(strata_abu) <- c("Stratum" ,"Abundance")
@@ -276,18 +279,4 @@ nasc.maturity<- nasc.maturity[,c("Stratum","Transect","FID","mSA","ID","Cruise.x
 
 colnames(nasc.maturity) <-c("Stratum","Transect","FID","SA","ID","Cruise",	"LOG","longitude","latitude","Mat_Perc","Imm_Perc","multiplier","MAT", "IMM")
 
-setwd("C:/Users/sakin001/Google Drive/HERAS/2018/FinalIces/")
-
-
-# source("stox_plot.r")
-#nasc.maturity$maturperc # This is the NASC splited as  Matur
-#nasc.maturity$immaturperc # This is the NASC splited as  Immature
-######
-# End..
 write.csv(nasc.maturity,"nasc.maturity.Europe_T2.csv", row.names = F)
-#source("stox_plot.r")
-#nasc.maturity$maturperc # This is the NASC splited as  Matur
-#nasc.maturity$immaturperc # This is the NASC splited as  Immature
-######
-# End..
-######
