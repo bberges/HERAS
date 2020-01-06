@@ -33,8 +33,8 @@ fileName <- 'species_codes_201911.csv'
 
 speciesList <- read.csv(file.path(dataPath,fileName), fill = TRUE, header = TRUE)
 
-#surveyYearMat    <- c(2019,2018,2017)
-surveyYearMat    <- c(2019)
+surveyYearMat    <- c(2019,2018,2017)
+#surveyYearMat    <- c(2019)
 
 for(surveyYear in surveyYearMat){
 
