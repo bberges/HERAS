@@ -11,13 +11,15 @@ library(reshape) # melt and cast
 library(gstat)
 library(sp)
 
-path <- 'C:/git/HERAS/'
+path <- 'C:/git/HERAS'
 
 try(setwd(path),silent=TRUE)
 
 mainPath      <- file.path(".")
 dataPath      <- file.path(".","data")
 functionPath  <- file.path(".","functions")
+# network data path
+dataPath      <- file.path('Z:/HERAS/data')
 
 source(file.path(functionPath,"load_ICESdB.R"))
 source(file.path(functionPath,"plot_biotic.R"))
@@ -28,19 +30,20 @@ source(file.path(functionPath,"mk_length_matrix.R"))
 mkReport  <- FALSE
 mkPlot    <- FALSE
 
-# load species list
+# load species list - in git data path
 fileName <- 'species_codes_201911.csv'
 
-speciesList <- read.csv(file.path(dataPath,fileName), fill = TRUE, header = TRUE)
+speciesList <- read.csv(file.path(".","data",fileName), fill = TRUE, header = TRUE)
 
 surveyYearMat    <- c(2019,2018,2017)
-#surveyYearMat    <- c(2019)
+surveyYearMat    <- c(2019)
 
 for(surveyYear in surveyYearMat){
 
 reportPath    <- file.path(".","reports",surveyYear)
-rawDataPath   <- file.path(".","data",'raw_data',surveyYear)
 figurePath    <- file.path(".","figures",'raw_data',surveyYear)
+
+rawDataPath   <- file.path(dataPath,'raw_data',surveyYear)
 
 # build directory list
 dataDirs <- list.dirs(path = rawDataPath, full.names = TRUE, recursive = TRUE)
@@ -64,6 +67,15 @@ for(idxDir in dataDirs){
                                as.character(idxHeader),']]')))
     }
   }
+  
+  length(Biology$BiologyIndividualAge[!Biology$BiologyIndividualAge == ''])
+  length(Biology$BiologyIndividualSex[!Biology$BiologyIndividualSex == ''])
+  length(Biology$BiologyIndividualMaturity[!Biology$BiologyIndividualMaturity == ''])
+  
+  A <- Biology[!Biology$BiologyIndividualSex == '',]
+  
+  dim(A[A$CatchSpeciesCode == 126417,])
+  dim(A[A$CatchSpeciesCode == 126425,])
 
   if(mkPlot){
     ### plot Biotic data
