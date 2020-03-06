@@ -14,7 +14,7 @@ mainPath      <- file.path(".")
 outPath       <- file.path(".","output")
 functionPath  <- file.path(".","functions")
 
-dataPath <- 'Z:/HERAS/data'
+dataPath <- 'D:/HERAS/data'
 
 #surveyYearMat    <- c(2016,2017,2018,2019)
 #surveyYearMat    <- c(2017,2018,2019)
@@ -30,10 +30,12 @@ for(idxYear in 1:length(surveyYearMat)){
   dataDirs      <- c(file.path(StoXDataPath,paste0('HERAS_',surveyYear,'_HER_EU')),
                      file.path(StoXDataPath,paste0('HERAS_',surveyYear,'_HER_NO')))
   for(idxDataDir in 1:length(dataDirs)){
+    # create outputs
     runBaseline(projectName = dataDirs[idxDataDir], save = TRUE,exportCSV = TRUE,modelType = c('baseline'))
     runBaseline(projectName = dataDirs[idxDataDir], save = TRUE,exportCSV = TRUE,modelType = c('baseline-report'))
-    currentBaseLine       <- getBaseline(dataDirs[idxDataDir],save = TRUE,exportCSV = TRUE,modelType = c('baseline'))
-    currentBaseLineReport <- getBaseline(dataDirs[idxDataDir],save = TRUE,exportCSV = TRUE,modelType = c('baseline-report'))
+    #
+    currentBaseLine       <- getBaseline(dataDirs[idxDataDir],save = FALSE,exportCSV = FALSE,modelType = c('baseline'))
+    currentBaseLineReport <- getBaseline(dataDirs[idxDataDir],save = FALSE,exportCSV = FALSE,modelType = c('baseline-report'))
     
     runBootstrap(projectName=dataDirs[idxDataDir],
                  bootstrapMethod="AcousticTrawl",
